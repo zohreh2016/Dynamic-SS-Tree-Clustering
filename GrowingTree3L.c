@@ -431,436 +431,333 @@ return 0;
 
 /*********************************************************************************************************/
 
-//int GrowingTree_grow (int dim,double R1,double R2,int ndata,double *data, struct GrowingTree3L *ptr_root)
-//{
-//    double *dist, *center, *datum,mindist,mindist2,tmp=0.0;
-//        int i,k,j,index_close1_cluster,index_close2_cluster, Index_Outer=0,Index_Inner=0;
-//        center= (double *) calloc(dim, sizeof(double)) ;
-//        datum= (double *) calloc(dim, sizeof(double)) ;
-//        dist= (double *) calloc(dim, sizeof(double)) ;                             // the distances of 2 points which have the same dimmension, so I think the size should be dim   ???
-//        double * StoreBOuterArray = (double *)malloc(sizeof(double)*ndata*dim);    //the size should be changed  use realloc  ....> .... bezarim baad realloc konim
-//        double * StoreBInnerArray = (double *)malloc(sizeof(double)*ndata*dim);    //the size should be changed
-//        int * AssignInnerBigCluster = (int *)malloc(sizeof(int)*ndata);            //...size
-//        int * BigClusterAdd=(int *)calloc(ptr_root->N1, sizeof(int)) ;
-//        int * BigClusterOuterAdd=(int *)calloc(ptr_root->N1, sizeof(int)) ;
-//       int * ChangeSizeSmallCluster[ptr_root->N1];
-//        for (i=0;i<ptr_root->N1;i++)
-//      ChangeSizeSmallCluster[i]=(int *)calloc( ptr_root->N2, sizeof(int)) ;   //??
-//    // int * ChangeSizeSmallCluster[i]=(int *)calloc(ptr_root->N1* ptr_root->N2, sizeof(int)) ;
-//        int n,t=0;
-//        int StartInsideBigC[ptr_root->N1];     // keeping start of points which their dist>R2 for each cluster
-//        memset(StartInsideBigC, 0, ptr_root->N1*sizeof(int)) ;
-//    
-///******* compute distances of all data to every clusters*******/
-//    
-//for(i=0; i<ndata ;i++)
-//{
-//    for(k=0; k<ptr_root->N1; k++)
-//           {
-//            for(j=0; j<dim; j++) center[j] = ptr_root->L1CentersRadii[k*(dim+1)+j] ;
-//            dist[k] = calc_dist_square(dim, data+i*dim, center);
-//           }
-//     mindist=dist[0];
-//       for (k=1;k<ptr_root->N1;k++)
-//       {
-//           if (dist[k]<mindist) {mindist=dist[k];}
-//          index_close1_cluster=k;
-//       }
-//    /***** distinguish if it will be in level 1 or 2 , it is also possible to make NEW cluaters in level 1 or 2********/
-//     if (mindist > R1)
-//                    {
-//                    printf("\n mindist > R1 so we should create new cluster but first store in the array\n");
-//                        //if (Index_Outer>=....)   StoreBOuterArray = (double *)realloc(sizeof(double)*....+1*dim);                               ???
-//                         for(j=0; j<dim; j++) StoreBOuterArray[j+(Index_Outer*dim)]=data[(i*dim)+j];
-//                        Index_Outer+=1;
-//                    }
-//    
-//     else if (mindist <= R1)
-//                   {
-//    /**calculate distances to inside clusters**/
-//                        for(k=0;k<ptr_root->L1node_NumChldrn[index_close1_cluster];k++)
-//                             {
-//                                for(j=0; j<dim; j++) center[j] = ptr_root->L2CentersRadii[index_close1_cluster][k*(dim+1)+j] ;
-//                                dist[k] = calc_dist_square(dim, data+i*dim, center);
-//                             }
-//                        mindist2=dist[0];
-//                        for (k=1;k<ptr_root->L1node_NumChldrn[index_close1_cluster];k++)
-//                             {
-//                                 if (dist[k]<mindist2) { mindist2=dist[k];}
-//                             index_close2_cluster=k;
-//                             }
-//             if (mindist2 > R2)
-//             /****** we should create another inner cluster and also to figure out that cluster,so we need another array to assign****/
-//                             {
-//                               //   if (Index_Inner>=.....)   StoreBInnerArray = (double *)realloc(sizeof(double)*.....+1*dim);                        ???
-//                                memcpy(datum, data+i*dim, dim*sizeof(double));
-//                                for(j=0; j<dim; j++)    StoreBInnerArray[j+(Index_Inner*dim)]=data[(i*dim)+j];
-//                                AssignInnerBigCluster[Index_Inner]=index_close1_cluster;
-//                                Index_Inner++;
-//                                BigClusterAdd[index_close1_cluster]++;
-//                                BigClusterOuterAdd[index_close1_cluster]++ ;
-//                                for(j=0;j<dim;j++)  ptr_root->L1CentersRadii[index_close1_cluster*dim+j]+= datum[j];
-//                             }
-//            else if (mindist2 <= R2)
-//                             {
-//                                memcpy(datum, data+i*dim, dim*sizeof(double));
-//                                ptr_root->L2node_DataSize[index_close1_cluster][index_close2_cluster]+=1;
-//                                ChangeSizeSmallCluster[index_close1_cluster][index_close2_cluster]++;
-//                                for(j=0;j<dim;j++)  ptr_root->L2CentersRadii[index_close1_cluster][index_close2_cluster*dim+j]+= datum[j];
-//                                BigClusterAdd[index_close1_cluster]++;
-//                              }
-//                    }
-//}
-//    /*******re-adjust size, start of small clusters AND size,start,startchild & numchild  of bigcluster and also reajdust center of small cluaters and big ones.********/
-//    
-//  int position=0;
-//  int SumChangeSizeSmallClusters=0;
-//  for(i=0;i<ptr_root->N1;i++)
-//  {
-//    for(k=0; k<ptr_root->L1node_NumChldrn[i]; k++)
-//      {
-//          ptr_root->L2node_DataSize[i][k] += ChangeSizeSmallCluster[i][k];
-//          SumChangeSizeSmallClusters+= ChangeSizeSmallCluster[i][k];
-//          if ((i!=0)&&(k==0)){ ptr_root->L2node_StartDatum[i][k] = position;}
-//              else { for(j=k; k>0; j--)   ptr_root->L2node_StartDatum[i][k] +=position+ChangeSizeSmallCluster[i][k-1];}
-//        
-//          if (ptr_root->L2node_DataSize[i][k]>0)   for (j=0;j<dim;j++)  ptr_root->L2CentersRadii[i][k*dim+j]/= (double)ptr_root->L2node_DataSize[i][k];        // re-adjust center of big clusters
-//      }
-//      
-//      StartInsideBigC[i]=ptr_root->L1node_StartDatum[i]+ptr_root->L1node_DataSize[i]+SumChangeSizeSmallClusters;       //later I'll need the start for points which their dists>R2
-//      ptr_root->L1node_StartDatum[i+1]= StartInsideBigC[i]+BigClusterOuterAdd[i];
-//      ptr_root->L1node_DataSize[i]+=BigClusterAdd[i];
-//      position=ptr_root->L1node_StartDatum[i]+ptr_root->L1node_DataSize[i];
-//      ptr_root->L1node_StartChild[i+1]+=BigClusterAdd[i];
-//      if (ptr_root->L1node_DataSize[i]>0)   for (j=0;j<dim;j++)  ptr_root->L1CentersRadii[i*dim+j]/= (double)ptr_root->L1node_DataSize[i];               // re-adjust center of big clusters
-//      SumChangeSizeSmallClusters=0;
-//      
-//  }
-// 
-//  
-// /***Re-adjust radius of small clusters***/
-//   for(i=0;i<ptr_root->N1;i++)
-//    {
-//      for(k=0; k<ptr_root->N2; k++)
-//      {
-//       if (ChangeSizeSmallCluster[i][k]!=0)
-//       {
-//           for(j=0; j<dim; j++) center[j] = ptr_root->L2CentersRadii[i][k*(dim+1)+j] ;
-//              for(j=ptr_root->L2node_StartDatum[i][k]; j<((ptr_root->L2node_DataSize[i][k])-1) ; j++)
-//                {
-//                  tmp = calc_dist_square(dim, data+j*dim, center) ;        //data+j*dim  is not true
-//                  if(( ptr_root->L2CentersRadii[i][k]< tmp) && (tmp<=R2))            /*  ????     radius should be kept as a value         */
-//                       ptr_root->L2CentersRadii[i][k]  = tmp ;
-//                 }
-//       }
-//      }
-//    }
-//    
-//clustering_innerpoints(R2,StoreBInnerArray,AssignInnerBigCluster,dim,ptr_root,Index_Inner,BigClusterOuterAdd,StartInsideBigC);
-//    
-//clustering_outerpoints(R1,R2,StoreBOuterArray,AssignInnerBigCluster,dim,ptr_root,ndata,Index_Outer);
-//
-//return 0;}
-/////*************************************clustering innerpoints****************************/
-//
-///**** first investigating insidepoints  ****/
-//int clustering_innerpoints(double R2,double *StoreBInnerArray,int *AssignInnerBigCluster,int dim,struct GrowingTree3L *ptr_root,int Index_Inner,int *BigClusterOuterAdd,int *StartInsideBigC)
-//{
-//    int  N2,n,position,t ,k,count_ch,j,i0,im,i,N2_1,shift_index=0;
-//    
-//    int *cluster_start, *cluster_size,child_end,child_start;
-//    
-//    int *cluster_assign;
-//    double tmp, dist_ss, *datum, *buf,*cluster_center,*current_center, *child_center, *cluster_radius ; //child center va current center taarif kon
-//    
-//    datum  = (double *)calloc(dim, sizeof(double)) ;
-//    buf  = (double *)calloc(Index_Inner*dim, sizeof(double)) ;
-//    cluster_assign = (int *)calloc(Index_Inner, sizeof(int)) ;
-//    cluster_center =(double *)calloc(Index_Inner*dim, sizeof(double));   // index_inner can also be very large,so..                           ??
-//    cluster_size =(int *)calloc(Index_Inner, sizeof(int));
-//    cluster_start =(int *)calloc(Index_Inner, sizeof(int));
-//    cluster_radius = (double *)calloc(Index_Inner, sizeof(double)) ;
-//    
-//    n=0;
-//    int start0,end0,start1,start[ptr_root->N1];           // a temporary kepping start
-//    memset(start,0,ptr_root->N1*sizeof(int));
-//    
-//    
-//    
-//    /***** order the inside points    *****/
-//   position=0;
-//   for(k=0; k<ptr_root->N1; k++)
-//    {
-//     if (BigClusterOuterAdd[k]!=0)  start[k]=position;             //if it is Null,what I should hold for that cluster                        ???
-//        
-//         position+=BigClusterOuterAdd[k];
-//    }
-//    
-//   for(k=0; k<((ptr_root->N1)-1); k++)
-//    {
-//      if (BigClusterOuterAdd[k]!=0)
-//      {
-//          start0= start[k] ;
-//          end0  = start0 + BigClusterOuterAdd[k];
-//          if (BigClusterOuterAdd[k+1]!=0)  start1= start[k+1];
-//          else {  while (BigClusterOuterAdd[k+1]==0) k++;   start1= start[k];}
-//          while(start0 < end0)
-//          {
-//              while((start0<end0)&&(AssignInnerBigCluster[start0]==k)) start0++ ;
-//              if(start0<end0)
-//              {
-//                  while((start1<Index_Inner)&&(AssignInnerBigCluster[start1]!=k)) start1++ ;
-//                  if(start1==Index_Inner) { printf("\nError: start1==index_Inner.\n");   return 0; }
-//                  memcpy(datum, StoreBInnerArray+start0*dim, dim*sizeof(double)) ;
-//                  memcpy(StoreBInnerArray+start0*dim, StoreBInnerArray+start1*dim, dim*sizeof(double)) ;
-//                  memcpy(StoreBInnerArray+start1*dim, datum, dim*sizeof(double)) ;
-//                  AssignInnerBigCluster[start1] = AssignInnerBigCluster[start0] ;
-//                  AssignInnerBigCluster[start0] = k;
-//                  start0++;   start1++;
-//              }
-//          }
-//          
-//      }
-//   }/****** End of loop for(k=0; ******/
-//          
-//   for(k=0; k<ptr_root->N1; k++)
-//   {     n=BigClusterOuterAdd[k];
-//          if (n!=0)
-//        {
-//           i0= start[k];
-//           im= i0 + BigClusterOuterAdd[k] ;
-//           N2_1 = bkmeans (n,5, R2,dim, i0, im,StoreBInnerArray,cluster_assign, datum,cluster_center, cluster_radius, cluster_start, cluster_size);
-//            t=ptr_root->L1node_NumChldrn[k]+N2_1;
-//            ptr_root->L2node_StartDatum[k]= (int *) realloc(ptr_root->L2node_StartDatum[k], t*sizeof(int)) ;
-//            ptr_root->L2node_DataSize[k]  = (int *) realloc(ptr_root->L2node_DataSize[k], t*sizeof(int)) ;
-//            ptr_root->L2CentersRadii[k]= (double *) realloc( ptr_root->L2CentersRadii[k],t*(dim+1)*sizeof(double)) ;
-//            
-//            count_ch= ptr_root->L1node_NumChldrn[k];
-//            ptr_root->L1node_NumChldrn[k]+= N2_1;
-//            ptr_root->N2 += N2_1;
-//       
-//           for(i=1; i<N2_1; i++)
-//            {
-//               ptr_root->L2node_StartDatum[k][count_ch] = cluster_start[i]+ StartInsideBigC[k];       //???  RECHECK PLEASEEEEEE
-//               ptr_root->L2node_DataSize[k][count_ch] = cluster_size[i];
-//               for(j=0;j<dim;j++) ptr_root->L2CentersRadii[k][count_ch*(dim+1)+j] =  cluster_center[i*dim+j];
-//               ptr_root->L2CentersRadii[k][count_ch*(dim+1)+dim] = cluster_radius[i] ;
-//               count_ch++ ;
-//            }
-//                
-//         }
-//        
-//      }
-//    N2= ptr_root->N2;
-//  
-//    return 0;  //return N2;
-//}
-//    
-//    
-/////*************************************clustering outerpoints****************************/
-//
-///****  investigating outsidepoints  ****/
-//    
-//int clustering_outerpoints(int R1,int R2,double *StoreBOuterArray,int *AssignInnerBigCluster ,int dim,struct GrowingTree3L *ptr_root,int ndata,int Index_Outer)
-//{
-//    int  node_indx,count_ch,l,j,i0,im,i,k,N1_1,N1_2,shift_index=0;
-//    int *cluster_start, *cluster_size,child_end,child_start;
-//    int *cluster_assign;
-//    double tmp, dist_ss, *datum, *buf,*cluster_center, cluster_radius[Index_Outer],*current_center, *child_center ;
-//    int n,N1,N2,StartOutsideBigC;
-//    
-//    datum  = (double *)calloc(dim, sizeof(double)) ;
-//    buf  = (double *)calloc(Index_Outer*dim, sizeof(double)) ;
-//    cluster_assign = (int *)calloc(Index_Outer, sizeof(int)) ;
-//    cluster_center =(double *)calloc(Index_Outer*dim, sizeof(double));
-//    cluster_size =(int *)calloc(Index_Outer, sizeof(int));
-//    cluster_start =(int *)calloc(Index_Outer, sizeof(int));
-//    
-//    
-//    count_ch=0;
-//    i0= StoreBOuterArray[0];
-//    im=i0+Index_Outer-1;
-//    StartOutsideBigC= ptr_root->L1node_StartDatum[(ptr_root->N1)-1]+ptr_root->L1node_DataSize[(ptr_root->N1)-1];
-//    
-//    N1_1=bkmeans(Index_Outer,5, R1,dim, i0, im, StoreBOuterArray,cluster_assign,datum,cluster_center, cluster_radius, cluster_start, cluster_size);
-//    
-//    count_ch=ptr_root->N1;
-//    
-//    for(k=0; k<(N1_1); k++)
-//       {
-//         ptr_root->L1node_DataSize[count_ch] = cluster_size[k];
-//         ptr_root->L1node_StartDatum[count_ch] = cluster_start[k]+StartOutsideBigC ;
-//         for(j=0; j<dim; j++) ptr_root->L1CentersRadii[count_ch*(dim+1)+j] = cluster_center[k*dim+j];
-//         ptr_root->L1CentersRadii[count_ch*(dim+1)+dim] = cluster_radius[k] ;
-//         count_ch++;
-//       }
-//    node_indx=0;
-//    for(k=0; k<N1_1; k++)
-//      {
-//        i0= ptr_root->L1node_StartDatum[k];   im= i0 + ptr_root->L1node_DataSize[k] ;
-//          n=ptr_root->L1node_DataSize[k];                                            //RECHECK PLEASE
-//        N1_2 = bkmeans(n,5, R1,dim, i0, im, StoreBOuterArray,cluster_assign,datum,cluster_center, cluster_radius, cluster_start, cluster_size) ;
-//
-//               ptr_root->L1node_NumChldrn[k]  = N1_2;
-//               ptr_root->L1node_StartChild[k] = StartOutsideBigC +node_indx ;
-//
-//                for(i=0; i<N1_2; i++)
-//                  {
-//                  ptr_root->L2node_StartDatum[k+N1][i] = cluster_start[i] + StartOutsideBigC ;
-//                  ptr_root->L2node_DataSize[k+N1][i]   = cluster_size[i] ;
-//           
-//                  for(j=0;j<dim;j++) ptr_root->L2CentersRadii[k][i*(dim+1)+j] = cluster_center[i*dim+j];
-//             
-//                 ptr_root->L2CentersRadii[k][i*(dim+1)+dim] = cluster_radius[i] ;
-//                 node_indx++ ;
-//                  }
-//     }
-//    ptr_root->N1+=N1_1;
-//    N1=ptr_root->N1;
-//    ptr_root->N2+=node_indx;
-//    N2=ptr_root->N2;
-//    
-//
-//
-///*** Re-adjust the radius of each L1 node ***/
-//    
-//    for(i=0; i<ptr_root->N1; i++)
-//     {
-//        for(j=0; j<dim/*DIM*/; j++) current_center[j] = ptr_root->L1CentersRadii[i*(dim+1)+j] ;
-//
-//        child_start = ptr_root->L1node_StartChild[i] ;
-//        child_end = child_start + ptr_root->L1node_NumChldrn[i] ;
-//        for(k=child_start; k<child_end; k++)
-//          {
-//            for(j=0; j<dim/*DIM*/; j++) child_center[j]= ptr_root->L2CentersRadii[i][k*(dim+1)+j] ;
-//            dist_ss = calc_dist_square(dim, current_center, child_center) ;
-//            dist_ss=sqrt(dist_ss);
-//            tmp = ptr_root->L2CentersRadii[i][k*(dim+1)+dim] + dist_ss ;
-//            if((tmp<=R1)  && (ptr_root->L1CentersRadii[i*(dim+1)+dim] < tmp) )
-//                ptr_root->L1CentersRadii[i*(dim+1)+dim] = tmp ;
-//            else printf("\n ERROR \n");
-//          }
-//     }
-//
-//    /*** free memory: buf, cluster_assign ***/
-//    free(datum);
-//    free(buf) ;
-//    free(cluster_assign);
-//    free(cluster_center);
-//    free(current_center);
-//    free(child_center) ;
-//
-//    return 0;
-//}
-//
+int GrowingTree_grow (int dim,double R1,double R2,int ndata,double *data, struct GrowingTree3L *ptr_root)
+{
+   double *dist, *center, *datum,mindist,mindist2,tmp=0.0;
+       int i,k,j,index_close1_cluster,index_close2_cluster, Index_Outer=0,Index_Inner=0;
+       center= (double *) calloc(dim, sizeof(double)) ;
+       datum= (double *) calloc(dim, sizeof(double)) ;
+       dist= (double *) calloc(dim, sizeof(double)) ;                             // the distances of 2 points which have the same dimmension, so I think the size should be dim   ???
+       double * StoreBOuterArray = (double *)malloc(sizeof(double)*ndata*dim);    //the size should be changed  use realloc  ....> .... bezarim baad realloc konim
+       double * StoreBInnerArray = (double *)malloc(sizeof(double)*ndata*dim);    //the size should be changed
+       int * AssignInnerBigCluster = (int *)malloc(sizeof(int)*ndata);            //...size
+       int * BigClusterAdd=(int *)calloc(ptr_root->N1, sizeof(int)) ;
+       int * BigClusterOuterAdd=(int *)calloc(ptr_root->N1, sizeof(int)) ;
+      int * ChangeSizeSmallCluster[ptr_root->N1];
+       for (i=0;i<ptr_root->N1;i++)
+     ChangeSizeSmallCluster[i]=(int *)calloc( ptr_root->N2, sizeof(int)) ;   //??
+   // int * ChangeSizeSmallCluster[i]=(int *)calloc(ptr_root->N1* ptr_root->N2, sizeof(int)) ;
+       int n,t=0;
+       int StartInsideBigC[ptr_root->N1];     // keeping start of points which their dist>R2 for each cluster
+       memset(StartInsideBigC, 0, ptr_root->N1*sizeof(int)) ;
+   
+/******* compute distances of all data to every clusters*******/
+   
+for(i=0; i<ndata ;i++)
+{
+   for(k=0; k<ptr_root->N1; k++)
+          {
+           for(j=0; j<dim; j++) center[j] = ptr_root->L1CentersRadii[k*(dim+1)+j] ;
+           dist[k] = calc_dist_square(dim, data+i*dim, center);
+          }
+    mindist=dist[0];
+      for (k=1;k<ptr_root->N1;k++)
+      {
+          if (dist[k]<mindist) {mindist=dist[k];}
+         index_close1_cluster=k;
+      }
+   /***** distinguish if it will be in level 1 or 2 , it is also possible to make NEW cluaters in level 1 or 2********/
+    if (mindist > R1)
+                   {
+                   printf("\n mindist > R1 so we should create new cluster but first store in the array\n");
+                       //if (Index_Outer>=....)   StoreBOuterArray = (double *)realloc(sizeof(double)*....+1*dim);                               
+                        for(j=0; j<dim; j++) StoreBOuterArray[j+(Index_Outer*dim)]=data[(i*dim)+j];
+                       Index_Outer+=1;
+                   }
+   
+    else if (mindist <= R1)
+                  {
+   /**calculate distances to inside clusters**/
+                       for(k=0;k<ptr_root->L1node_NumChldrn[index_close1_cluster];k++)
+                            {
+                               for(j=0; j<dim; j++) center[j] = ptr_root->L2CentersRadii[index_close1_cluster][k*(dim+1)+j] ;
+                               dist[k] = calc_dist_square(dim, data+i*dim, center);
+                            }
+                       mindist2=dist[0];
+                       for (k=1;k<ptr_root->L1node_NumChldrn[index_close1_cluster];k++)
+                            {
+                                if (dist[k]<mindist2) { mindist2=dist[k];}
+                            index_close2_cluster=k;
+                            }
+            if (mindist2 > R2)
+            /****** we should create another inner cluster and also to figure out that cluster,so we need another array to assign****/
+                            {
+                              //   if (Index_Inner>=.....)   StoreBInnerArray = (double *)realloc(sizeof(double)*.....+1*dim);                       
+                               memcpy(datum, data+i*dim, dim*sizeof(double));
+                               for(j=0; j<dim; j++)    StoreBInnerArray[j+(Index_Inner*dim)]=data[(i*dim)+j];
+                               AssignInnerBigCluster[Index_Inner]=index_close1_cluster;
+                               Index_Inner++;
+                               BigClusterAdd[index_close1_cluster]++;
+                               BigClusterOuterAdd[index_close1_cluster]++ ;
+                               for(j=0;j<dim;j++)  ptr_root->L1CentersRadii[index_close1_cluster*dim+j]+= datum[j];
+                            }
+           else if (mindist2 <= R2)
+                            {
+                               memcpy(datum, data+i*dim, dim*sizeof(double));
+                               ptr_root->L2node_DataSize[index_close1_cluster][index_close2_cluster]+=1;
+                               ChangeSizeSmallCluster[index_close1_cluster][index_close2_cluster]++;
+                               for(j=0;j<dim;j++)  ptr_root->L2CentersRadii[index_close1_cluster][index_close2_cluster*dim+j]+= datum[j];
+                               BigClusterAdd[index_close1_cluster]++;
+                             }
+                   }
+}
+   /*******re-adjust size, start of small clusters AND size,start,startchild & numchild  of bigcluster and also reajdust center of small cluaters and big ones.********/
+   
+ int position=0;
+ int SumChangeSizeSmallClusters=0;
+ for(i=0;i<ptr_root->N1;i++)
+ {
+   for(k=0; k<ptr_root->L1node_NumChldrn[i]; k++)
+     {
+         ptr_root->L2node_DataSize[i][k] += ChangeSizeSmallCluster[i][k];
+         SumChangeSizeSmallClusters+= ChangeSizeSmallCluster[i][k];
+         if ((i!=0)&&(k==0)){ ptr_root->L2node_StartDatum[i][k] = position;}
+             else { for(j=k; k>0; j--)   ptr_root->L2node_StartDatum[i][k] +=position+ChangeSizeSmallCluster[i][k-1];}
+       
+         if (ptr_root->L2node_DataSize[i][k]>0)   for (j=0;j<dim;j++)  ptr_root->L2CentersRadii[i][k*dim+j]/= (double)ptr_root->L2node_DataSize[i][k];        // re-adjust center of big clusters
+     }
+     
+     StartInsideBigC[i]=ptr_root->L1node_StartDatum[i]+ptr_root->L1node_DataSize[i]+SumChangeSizeSmallClusters;       //later I'll need the start for points which their dists>R2
+     ptr_root->L1node_StartDatum[i+1]= StartInsideBigC[i]+BigClusterOuterAdd[i];
+     ptr_root->L1node_DataSize[i]+=BigClusterAdd[i];
+     position=ptr_root->L1node_StartDatum[i]+ptr_root->L1node_DataSize[i];
+     ptr_root->L1node_StartChild[i+1]+=BigClusterAdd[i];
+     if (ptr_root->L1node_DataSize[i]>0)   for (j=0;j<dim;j++)  ptr_root->L1CentersRadii[i*dim+j]/= (double)ptr_root->L1node_DataSize[i];               // re-adjust center of big clusters
+     SumChangeSizeSmallClusters=0;
+     
+ }
+
+
+/***Re-adjust radius of small clusters***/
+  for(i=0;i<ptr_root->N1;i++)
+   {
+     for(k=0; k<ptr_root->N2; k++)
+     {
+      if (ChangeSizeSmallCluster[i][k]!=0)
+      {
+          for(j=0; j<dim; j++) center[j] = ptr_root->L2CentersRadii[i][k*(dim+1)+j] ;
+             for(j=ptr_root->L2node_StartDatum[i][k]; j<((ptr_root->L2node_DataSize[i][k])-1) ; j++)
+               {
+                 tmp = calc_dist_square(dim, data+j*dim, center) ;        //data+j*dim  is not true
+                 if(( ptr_root->L2CentersRadii[i][k]< tmp) && (tmp<=R2))            /*  ????     radius should be kept as a value         */
+                      ptr_root->L2CentersRadii[i][k]  = tmp ;
+                }
+      }
+     }
+   }
+   
+clustering_innerpoints(R2,StoreBInnerArray,AssignInnerBigCluster,dim,ptr_root,Index_Inner,BigClusterOuterAdd,StartInsideBigC);
+   
+clustering_outerpoints(R1,R2,StoreBOuterArray,AssignInnerBigCluster,dim,ptr_root,ndata,Index_Outer);
+
+return 0;}
+/*************************************clustering innerpoints****************************/
+
+/**** first investigating insidepoints  ****/
+int clustering_innerpoints(double R2,double *StoreBInnerArray,int *AssignInnerBigCluster,int dim,struct GrowingTree3L *ptr_root,int Index_Inner,int *BigClusterOuterAdd,int *StartInsideBigC)
+{
+   int  N2,n,position,t ,k,count_ch,j,i0,im,i,N2_1,shift_index=0;
+   
+   int *cluster_start, *cluster_size,child_end,child_start;
+   
+   int *cluster_assign;
+   double tmp, dist_ss, *datum, *buf,*cluster_center,*current_center, *child_center, *cluster_radius ; //child center va current center taarif kon
+   
+   datum  = (double *)calloc(dim, sizeof(double)) ;
+   buf  = (double *)calloc(Index_Inner*dim, sizeof(double)) ;
+   cluster_assign = (int *)calloc(Index_Inner, sizeof(int)) ;
+   cluster_center =(double *)calloc(Index_Inner*dim, sizeof(double));   // index_inner can also be very large,so..                           ??
+   cluster_size =(int *)calloc(Index_Inner, sizeof(int));
+   cluster_start =(int *)calloc(Index_Inner, sizeof(int));
+   cluster_radius = (double *)calloc(Index_Inner, sizeof(double)) ;
+   
+   n=0;
+   int start0,end0,start1,start[ptr_root->N1];           // a temporary kepping start
+   memset(start,0,ptr_root->N1*sizeof(int));
+   
+   
+   
+   /***** order the inside points    *****/
+  position=0;
+  for(k=0; k<ptr_root->N1; k++)
+   {
+    if (BigClusterOuterAdd[k]!=0)  start[k]=position;             //if it is Null,what I should hold for that cluster                        ???
+       
+        position+=BigClusterOuterAdd[k];
+   }
+   
+  for(k=0; k<((ptr_root->N1)-1); k++)
+   {
+     if (BigClusterOuterAdd[k]!=0)
+     {
+         start0= start[k] ;
+         end0  = start0 + BigClusterOuterAdd[k];
+         if (BigClusterOuterAdd[k+1]!=0)  start1= start[k+1];
+         else {  while (BigClusterOuterAdd[k+1]==0) k++;   start1= start[k];}
+         while(start0 < end0)
+         {
+             while((start0<end0)&&(AssignInnerBigCluster[start0]==k)) start0++ ;
+             if(start0<end0)
+             {
+                 while((start1<Index_Inner)&&(AssignInnerBigCluster[start1]!=k)) start1++ ;
+                 if(start1==Index_Inner) { printf("\nError: start1==index_Inner.\n");   return 0; }
+                 memcpy(datum, StoreBInnerArray+start0*dim, dim*sizeof(double)) ;
+                 memcpy(StoreBInnerArray+start0*dim, StoreBInnerArray+start1*dim, dim*sizeof(double)) ;
+                 memcpy(StoreBInnerArray+start1*dim, datum, dim*sizeof(double)) ;
+                 AssignInnerBigCluster[start1] = AssignInnerBigCluster[start0] ;
+                 AssignInnerBigCluster[start0] = k;
+                 start0++;   start1++;
+             }
+         }
+         
+     }
+  }/****** End of loop for(k=0; ******/
+         
+  for(k=0; k<ptr_root->N1; k++)
+  {     n=BigClusterOuterAdd[k];
+         if (n!=0)
+       {
+          i0= start[k];
+          im= i0 + BigClusterOuterAdd[k] ;
+          N2_1 = bkmeans (n,5, R2,dim, i0, im,StoreBInnerArray,cluster_assign, datum,cluster_center, cluster_radius, cluster_start, cluster_size);
+           t=ptr_root->L1node_NumChldrn[k]+N2_1;
+           ptr_root->L2node_StartDatum[k]= (int *) realloc(ptr_root->L2node_StartDatum[k], t*sizeof(int)) ;
+           ptr_root->L2node_DataSize[k]  = (int *) realloc(ptr_root->L2node_DataSize[k], t*sizeof(int)) ;
+           ptr_root->L2CentersRadii[k]= (double *) realloc( ptr_root->L2CentersRadii[k],t*(dim+1)*sizeof(double)) ;
+           
+           count_ch= ptr_root->L1node_NumChldrn[k];
+           ptr_root->L1node_NumChldrn[k]+= N2_1;
+           ptr_root->N2 += N2_1;
+      
+          for(i=1; i<N2_1; i++)
+           {
+              ptr_root->L2node_StartDatum[k][count_ch] = cluster_start[i]+ StartInsideBigC[k];       //???  RECHECK PLEASEEEEEE
+              ptr_root->L2node_DataSize[k][count_ch] = cluster_size[i];
+              for(j=0;j<dim;j++) ptr_root->L2CentersRadii[k][count_ch*(dim+1)+j] =  cluster_center[i*dim+j];
+              ptr_root->L2CentersRadii[k][count_ch*(dim+1)+dim] = cluster_radius[i] ;
+              count_ch++ ;
+           }
+               
+        }
+       
+     }
+   N2= ptr_root->N2;
+ 
+   return 0;  //return N2;
+}
+   
+   
+/*************************************clustering outerpoints****************************/
+
+/****  investigating outsidepoints  ****/
+   
+int clustering_outerpoints(int R1,int R2,double *StoreBOuterArray,int *AssignInnerBigCluster ,int dim,struct GrowingTree3L *ptr_root,int ndata,int Index_Outer)
+{
+   int  node_indx,count_ch,l,j,i0,im,i,k,N1_1,N1_2,shift_index=0;
+   int *cluster_start, *cluster_size,child_end,child_start;
+   int *cluster_assign;
+   double tmp, dist_ss, *datum, *buf,*cluster_center, cluster_radius[Index_Outer],*current_center, *child_center ;
+   int n,N1,N2,StartOutsideBigC;
+   
+   datum  = (double *)calloc(dim, sizeof(double)) ;
+   buf  = (double *)calloc(Index_Outer*dim, sizeof(double)) ;
+   cluster_assign = (int *)calloc(Index_Outer, sizeof(int)) ;
+   cluster_center =(double *)calloc(Index_Outer*dim, sizeof(double));
+   cluster_size =(int *)calloc(Index_Outer, sizeof(int));
+   cluster_start =(int *)calloc(Index_Outer, sizeof(int));
+   
+   
+   count_ch=0;
+   i0= StoreBOuterArray[0];
+   im=i0+Index_Outer-1;
+   StartOutsideBigC= ptr_root->L1node_StartDatum[(ptr_root->N1)-1]+ptr_root->L1node_DataSize[(ptr_root->N1)-1];
+   
+   N1_1=bkmeans(Index_Outer,5, R1,dim, i0, im, StoreBOuterArray,cluster_assign,datum,cluster_center, cluster_radius, cluster_start, cluster_size);
+   
+   count_ch=ptr_root->N1;
+   
+   for(k=0; k<(N1_1); k++)
+      {
+        ptr_root->L1node_DataSize[count_ch] = cluster_size[k];
+        ptr_root->L1node_StartDatum[count_ch] = cluster_start[k]+StartOutsideBigC ;
+        for(j=0; j<dim; j++) ptr_root->L1CentersRadii[count_ch*(dim+1)+j] = cluster_center[k*dim+j];
+        ptr_root->L1CentersRadii[count_ch*(dim+1)+dim] = cluster_radius[k] ;
+        count_ch++;
+      }
+   node_indx=0;
+   for(k=0; k<N1_1; k++)
+     {
+       i0= ptr_root->L1node_StartDatum[k];   im= i0 + ptr_root->L1node_DataSize[k] ;
+         n=ptr_root->L1node_DataSize[k];                                            //RECHECK PLEASE
+       N1_2 = bkmeans(n,5, R1,dim, i0, im, StoreBOuterArray,cluster_assign,datum,cluster_center, cluster_radius, cluster_start, cluster_size) ;
+
+              ptr_root->L1node_NumChldrn[k]  = N1_2;
+              ptr_root->L1node_StartChild[k] = StartOutsideBigC +node_indx ;
+
+               for(i=0; i<N1_2; i++)
+                 {
+                 ptr_root->L2node_StartDatum[k+N1][i] = cluster_start[i] + StartOutsideBigC ;
+                 ptr_root->L2node_DataSize[k+N1][i]   = cluster_size[i] ;
+          
+                 for(j=0;j<dim;j++) ptr_root->L2CentersRadii[k][i*(dim+1)+j] = cluster_center[i*dim+j];
+            
+                ptr_root->L2CentersRadii[k][i*(dim+1)+dim] = cluster_radius[i] ;
+                node_indx++ ;
+                 }
+    }
+   ptr_root->N1+=N1_1;
+   N1=ptr_root->N1;
+   ptr_root->N2+=node_indx;
+   N2=ptr_root->N2;
+   
+
+
+/*** Re-adjust the radius of each L1 node ***/
+   
+   for(i=0; i<ptr_root->N1; i++)
+    {
+       for(j=0; j<dim/*DIM*/; j++) current_center[j] = ptr_root->L1CentersRadii[i*(dim+1)+j] ;
+
+       child_start = ptr_root->L1node_StartChild[i] ;
+       child_end = child_start + ptr_root->L1node_NumChldrn[i] ;
+       for(k=child_start; k<child_end; k++)
+         {
+           for(j=0; j<dim/*DIM*/; j++) child_center[j]= ptr_root->L2CentersRadii[i][k*(dim+1)+j] ;
+           dist_ss = calc_dist_square(dim, current_center, child_center) ;
+           dist_ss=sqrt(dist_ss);
+           tmp = ptr_root->L2CentersRadii[i][k*(dim+1)+dim] + dist_ss ;
+           if((tmp<=R1)  && (ptr_root->L1CentersRadii[i*(dim+1)+dim] < tmp) )
+               ptr_root->L1CentersRadii[i*(dim+1)+dim] = tmp ;
+           else printf("\n ERROR \n");
+         }
+    }
+
+   /*** free memory: buf, cluster_assign ***/
+   free(datum);
+   free(buf) ;
+   free(cluster_assign);
+   free(cluster_center);
+   free(current_center);
+   free(child_center) ;
+
+   return 0;
+}
+
 
 
 /********************************************* End of function Growing tree grow()***************************/
 
 
-/*************************************************Search Function***************************/
-
-//int allneighbors_search(int dim, int ndata, int kmax, double *data, struct SphereTree4L *ptr_root,
-//                         double *query, double delta, int *num_outdata, int **outdata)
-//{
-//   int    i, j, k, n1_nearclusters, n2_nearclusters, count,
-//          *nearclusters1, *nearclusters2,  cindx, start, end, offset ;
-//   double dist,radius, *center, *datum;
-//
-//   center= (double *) calloc(dim, sizeof(double)) ;
-//   datum = (double *) calloc(dim, sizeof(double)) ;
-//     *outdata = (int *)calloc(ptr_root->leafmax, sizeof(int) ) ;
-//
-//   count = 0 ;
-//   nearclusters1 = (int *)calloc( ptr_root->N1, sizeof(int) ) ;
-//
-//   offset = 0 ;
-//   for(k=0; k<ptr_root->N1; k++) {
-//      for(j=0; j<dim; j++) center[j] = ptr_root->L1CentersRadii[k*(dim+1)+j] ;
-//      radius = ptr_root->L1CentersRadii[k*(dim+1)+dim] ;
-//      dist = calc_dist_square(dim, query, center);
-//      dist = sqrt(dist);
-//      count++ ;
-//      if(dist < radius + delta) {
-//         nearclusters1[offset] = k ;
-//          printf("\n cluster %d in level 1 is in the region with delta = %f \n",k,delta);
-//         if (SEARCH_L1) printf("nearclusters1[%d] = %d, dist = %lf, delta = %lf, radius = %lf \n",offset,nearclusters1[offset],dist,delta,radius);
-//         offset++ ;
-//      }
-//   }
-//   n1_nearclusters = offset ;
-//   nearclusters2 = (int *)calloc( n1_nearclusters*kmax, sizeof(int) ) ;
-//
-//   printf("L1 nodes checked: count = %d, offset = %d\n", count,offset);
-//
-//   //printf("n1_clusters = %d\n",n1_nearclusters);
-//
-//
-//
-//   offset = 0 ;
-//   for(i=0; i<n1_nearclusters; i++) {
-//      cindx = nearclusters1[i] ;   //the index of near cluster1
-//      start = ptr_root->L1node_StartChild[cindx] ;
-//      end = start + ptr_root->L1node_NumChldrn[cindx] ;
-//       printf("\n start and end in cluster %d = %d and %d\n",cindx , start, end);
-//      for(k=start; k<end; k++) {
-//         for(j=0; j<dim; j++) center[j] = ptr_root->L2CentersRadii[k*(dim+1)+j] ;
-//         radius = ptr_root->L2CentersRadii[k*(dim+1)+dim] ;
-//         dist = calc_dist_square(dim, query, center);
-//         dist = sqrt(dist);
-//         count++ ;
-//         if(dist < radius + delta) {
-//            nearclusters2[offset] = k ;
-//             printf("\n cluster %d in level 2 is in the region with delta = %f\n",k,delta);
-//            if (SEARCH_L2) printf("nearclusters2[%d] = %d, dist = %lf, delta = %lf, radius = %lf \n",offset,nearclusters2[offset],dist,delta,radius);
-//            offset++ ;
-//         }
-//      }
-//   }
-//   n2_nearclusters = offset ;
-//
-//
-//
-//   printf("L2 nodes checked: count = %d, offset = %d\n", count, offset);
-//  // printf("n2_clusters = %d\n",n2_nearclusters);
-//
-//
-//   offset = 0 ;
-//   for(i=0; i<n2_nearclusters; i++) {
-//      cindx = nearclusters2[i] ;
-//       start = ptr_root->L2node_StartDatum[cindx] ;
-//      end = start + ptr_root->L2node_DataSize[cindx] ;
-//       printf("\n start and end in cluster %d = %d and %d\n",cindx , start, end);
-//      for(k=start; k<end; k++) {
-//         for(j=0; j<dim; j++) datum[j]= data[k*dim+j] ;
-//
-//         dist = calc_dist_square(dim, query, datum);
-//         dist = sqrt(dist);
-//         count++ ;
-//
-//         if(dist <  delta) {
-//             (*outdata)[offset] = k ;
-//             printf("\n datapoint %d in leve2  is in the region with delta = %f \n",k ,delta);
-//             offset++ ;
-//         }
-//      }
-//   }
-//
-//
-//
-//   *num_outdata = offset ;
-//   printf("num_outdata:=%d,  count=%d\n\n", *num_outdata, count);
-//
-//   free(nearclusters1);
-//   free(nearclusters2);
-//   //free(outdata);
-//   free(center);
-//   free(datum) ;
-//
-//   return count ;
-//} /****** End of function allneighbors_search() ******/
-//
-//
 
 
 #endif
